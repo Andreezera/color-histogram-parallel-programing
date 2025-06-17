@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/time.h>
 
 #define RGB_COMPONENT_COLOR 255
 
@@ -77,15 +78,14 @@ static PPMImage *readPPM() {
 
 void Histogram(PPMImage *image, float *h) {
     int i, j, k, l, x, count;
-    int rows, cols;
-    float n = image->y * image->x;
-    cols = image->x;
-    rows = image->y;
+    int rows = image->y;
+    int cols = image->x;
+    float n = rows * cols;
 
     for (i = 0; i < n; i++) {
         image->data[i].red = floor((image->data[i].red * 4) / 256);
-        image->data[i].blue = floor((image->data[i].blue * 4) / 256);
         image->data[i].green = floor((image->data[i].green * 4) / 256);
+        image->data[i].blue = floor((image->data[i].blue * 4) / 256);
     }
 
     count = 0;
@@ -95,7 +95,9 @@ void Histogram(PPMImage *image, float *h) {
         for (k = 0; k <= 3; k++) {
             for (l = 0; l <= 3; l++) {
                 for (i = 0; i < n; i++) {
-                    if (image->data[i].red == j && image->data[i].green == k && image->data[i].blue == l) {
+                    if (image->data[i].red == j &&
+                        image->data[i].green == k &&
+                        image->data[i].blue == l) {
                         count++;
                     }
                 }
@@ -107,21 +109,30 @@ void Histogram(PPMImage *image, float *h) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    int i;
+int main() {
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+
     PPMImage *image = readPPM();
     float *h = (float *)malloc(sizeof(float) * 64);
-
-    for (i = 0; i < 64; i++)
+    for (int i = 0; i < 64; i++)
         h[i] = 0.0;
 
     Histogram(image, h);
 
-    for (i = 0; i < 64; i++) {
+    gettimeofday(&end, NULL);
+
+    for (int i = 0; i < 64; i++) {
         printf("%0.3f ", h[i]);
     }
-
     printf("\n");
+
+    long seconds = end.tv_sec - start.tv_sec;
+    long microseconds = end.tv_usec - start.tv_usec;
+    double elapsed = seconds + microseconds*1e-6;
+
+    printf("Tempo de execução (sequencial): %.6f segundos\n", elapsed);
+
     free(h);
     free(image->data);
     free(image);
