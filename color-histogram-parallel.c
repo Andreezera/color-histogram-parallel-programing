@@ -23,11 +23,13 @@ static PPMImage *readPPM() {
 
     fp = stdin;
 
+    // Recebe imagem
     if (!fgets(buff, sizeof(buff), fp)) {
         perror("stdin");
         exit(1);
     }
 
+    // Valida se imagem esta no formato P6
     if (buff[0] != 'P' || buff[1] != '6') {
         fprintf(stderr, "Invalid image format (must be 'P6')\n");
         exit(1);
@@ -79,9 +81,10 @@ static PPMImage *readPPM() {
 
 void Histogram(PPMImage *image, float *h) {
     int i, j, k, l, x, count;
-    int n = image->x * image->y;
+    int n = image->x * image->y; //numero total de pixels da imagem
 
     // Normaliza os valores RGB para 0..3
+    // 64 combinações de valores possiveis para cada pixel
     #pragma omp parallel for
     for (i = 0; i < n; i++) {
         image->data[i].red = floor((image->data[i].red * 4) / 256);
